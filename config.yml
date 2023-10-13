@@ -1,0 +1,443 @@
+web_server:
+  bind: 0.0.0.0
+  port: 3539
+
+schedules:
+  - tasks: [rss_download]
+    interval:
+      minutes: 5
+
+  - tasks: [ol_resume, ol_delete, ol_modify, ol_clean, limit_upload_by_tracker]
+    interval:
+      minutes: 5
+
+  - tasks: [warner]
+    interval:
+      minutes: 30
+  
+  - tasks: [sign_in]
+    schedule:
+      #8点到23点 每小时执行一次
+      hour: 8-23/1
+    
+
+# 变 量
+variables:
+  headers:
+    user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36'
+  # "&" 设置锚点, "*" 引用锚点
+  via: &via_setting    
+    - telegram:
+        bot_token: '1661741888:AAFJj-lfB6IU6tM_5hFCOE--yt4vOm_i1VQ'
+        recipients:
+          - username: 'Niceman110'
+  sites: &sites_setting
+    # auto_sin_in 已适配网站（查看ptsites/sites下站点）    
+    hdchina: 'PHPSESSID=ifttsh05vdc275d4pjn9emci4j; hdchina=322672b1ea1b89593b5bfa45025ae863c1a4a3c79405cf8136d5674585ddcb12'
+    springsunday: 'SPRINGID=qj9vva67a385akrqv9e8a582fjlvtq88kkfv8dn7jugpiscrc2cbbhehu1il7i1n'
+    hdarea: 'cf_clearance=ND59RiE1id11m_vFBuqbOravhb8DdCEB6WtNfA.pXlQ-1635498734-0-150; __gads=ID=de5b81d1b27ea2c2-22f494d6ebcc00dc:T=1635498738:RT=1635498738:S=ALNI_MaI4LkqyAldAH6QEpb0mYxe4vFzXg; _ga=GA1.2.649004351.1635498761; UM_distinctid=17ccb529a643ca-0d5b822203e3bc-53e356a-1fa400-17ccb529a655ef; Hm_lvt_04584756b6df0223a0a33332be422d74=1635498762; c_secure_uid=OTYyMTA%3D; c_secure_pass=46a39e569e76220d6e667341c89a0c0f; c_secure_ssl=eWVhaA%3D%3D; c_secure_tracker_ssl=eWVhaA%3D%3D; c_secure_login=bm9wZQ%3D%3D; _gid=GA1.2.1615612930.1635831649; CNZZDATA1275308543=1197125109-1635493228-https%253A%252F%252Fwww.hdarea.co%252F%7C1635839486; Hm_lpvt_04584756b6df0223a0a33332be422d74=1635840328'
+    btschool: 'c_secure_uid=NjMzNzE%3D; c_secure_pass=6f693b12b12a016242767b0955064a5e; c_secure_ssl=eWVhaA%3D%3D; c_secure_tracker_ssl=eWVhaA%3D%3D; c_secure_login=bm9wZQ%3D%3D; cf_clearance=BFO4gOJNR2TUAeBuMP48ENYgH6X4zaRWu5UkOfdVChU-1635513736-0-150'
+    et8: 'c_secure_uid=NjY5MDY%3D; c_secure_pass=bc7056ff4bac8e6ba105906036f17076; c_secure_ssl=eWVhaA%3D%3D; c_secure_tracker_ssl=eWVhaA%3D%3D; c_secure_login=bm9wZQ%3D%3D'
+    hdtime: 'c_secure_uid=NTIwNjk%3D; c_secure_pass=3e22c032bc5972b0d7cc801c511acfbe; c_secure_ssl=eWVhaA%3D%3D; c_secure_tracker_ssl=bm9wZQ%3D%3D; c_secure_login=bm9wZQ%3D%3D'
+    pthome: 'c_secure_uid=MTE1OTQ2; c_secure_pass=21827370f2e0a4d6a6524ec270b0f0ab; c_secure_ssl=eWVhaA%3D%3D; c_secure_tracker_ssl=eWVhaA%3D%3D; c_secure_login=bm9wZQ%3D%3D; UM_distinctid=17bf31042bc201-09bf4dae364c58-53e356a-144000-17bf31042bd143; CNZZDATA1275677506=1729549144-1627270319-%7C1635507429'
+    LemonHD: 'c_secure_uid=NDIzNDg%3D; c_secure_pass=b32d7c4da058335da33bc56958324a95; c_secure_ssl=eWVhaA%3D%3D; c_secure_tracker_ssl=eWVhaA%3D%3D; c_secure_login=bm9wZQ%3D%3D'
+    pterclub: 'c_secure_uid=Nzk2MA%3D%3D; c_secure_pass=bb0ba88190f0ba2c23f72297a330b241; c_secure_ssl=eWVhaA%3D%3D; c_secure_tracker_ssl=eWVhaA%3D%3D; c_secure_login=bm9wZQ%3D%3D; PHPSESSID=9rlitluhsv0dv420ic49i03mui'
+    totheglory: 'UM_distinctid=1793c513092176-06681985ec7498-53e356a-144000-1793c51309350d; uid=158998; pass=3eb86b3052e4935f0791f24b70c700f2; laccess=1633691263; __utma=230798618.614627120.1633759695.1633759695.1633759695.1; __utmz=230798618.1633759695.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); PHPSESSID=ugfureo6527vg21cht15i03c16; CNZZDATA4085974=cnzz_eid%3D788433139-1620213501-https%253A%252F%252Ftotheglory.im%252F%26ntime%3D1635503517'
+    m-team:
+          login:
+            username: 'phosic110'
+            password: '020705liu'
+    
+            
+
+
+templates:
+  ## Online
+  # 从 qBittorrent 获取数据
+  ol_from_qbittorrent_template:
+    from_qbittorrent_mod: &ol_from_qbittorrent_mod
+      host: 144.76.58.39
+      port: 9092
+      use_ssl: no
+      username: admin
+      password: 020705liu
+
+  # 基础
+  ol_qbittorrent_base_template:
+    qbittorrent_mod:
+      <<: *ol_from_qbittorrent_mod
+
+  # 添加
+  ol_qbittorrent_add_template:
+    qbittorrent_mod:
+      action:
+        add:
+          category: RSS
+          autoTMM: yes
+          upLimit: 13107200
+          reject_on:
+            dl_limit: no
+            dl_speed: 41943040
+            #记住拒绝过的种子 默认: yes
+            remember: no
+
+  # 根据tracker状态限制上传
+  qbittorrent_limit_upload_by_tracker_template:
+    qbittorrent_mod:
+      action:
+        limit_upload_by_tracker:
+          # 0为不限速，单位 byte
+          working: 0
+          not_working: 1
+
+  # 删除
+  ol_qbittorrent_delete_keeper_template:
+    qbittorrent_mod:
+      action:
+        remove:
+          keeper:
+            delete_files: yes
+            keep_disk_space: 30
+            
+  
+  
+  
+
+  ## 多种操作
+  # 清理
+  qbittorrent_delete_cleaner_template:
+    qbittorrent_mod:
+      action:
+        remove:
+          cleaner:
+            delete_files: yes
+
+  # 修改
+  qbittorrent_modify_template:
+    qbittorrent_mod:
+      action:
+        modify:
+          tag_by_tracker: true
+
+  # 恢复
+  qbittorrent_resume_template:
+    qbittorrent_mod:
+      action:
+        resume:
+          recheck_torrents: true
+
+  # 种子大小筛选
+  content_size:
+    content_size:
+      min: 2000
+      max: 666666
+      strict: no
+
+tasks:
+  hdchina:
+    rss: 
+      url: https://hdchina.org/torrentrss.php?rows=10&cat17=1&cat16=1&cat9=1&cat13=1&cat25=1&cat26=1&cat24=1&cat5=1&cat15=1&cat401=1&cat411=1&cat412=1&linktype=dl&passkey=a6012e1fc0df78cca38a9ba8f23f3e9c
+      other_fields:
+        - link
+    nexusphp:
+      cookie: 'hdchina=1259ebf41cca2dcc4c1ec31986c3aa52d026f5199110b8038fac43bc437c05cf; PHPSESSID=aismu3679ikv8tuvlj741fchbm'
+      user-agent: '{? headers.user_agent ?}'
+      comment: yes
+      discount:
+        - free
+        - 2xfree
+    verify_ssl_certificates: no
+    content_size:
+      min: 2048
+      max: 102400
+      strict: no
+    template:
+      - ol_qbittorrent_base_template
+      - ol_qbittorrent_add_template
+  springsunday:
+    rss: 
+      url: https://springsunday.net/torrentrss.php?rows=10&cat501=1&cat502=1&cat503=1&cat505=1&cat507=1&cat508=1&cat509=1&linktype=dl&passkey=df1cfe7e83bfc57b8efa521023886395
+      other_fields:
+        - link
+    nexusphp:
+      cookie: 'SPRINGID=qj9vva67a385akrqv9e8a582fjlvtq88kkfv8dn7jugpiscrc2cbbhehu1il7i1n'
+      user-agent: '{? headers.user_agent ?}'
+      comment: yes
+      discount:
+        - free
+        - 2xfree
+    verify_ssl_certificates: no
+    content_size:
+      min: 2048
+      max: 102400
+      strict: no
+    template:
+      - ol_qbittorrent_base_template
+      - ol_qbittorrent_add_template
+  
+  LemonHD:
+    rss: 
+      url: https://lemonhd.org/torrentrss.php?rows=20&linktype=dl&passkey=d45f0fe6b1a377f13fb205a9d07b5f30
+      other_fields:
+        - link
+    nexusphp:
+      cookie: 'c_secure_uid=NDIzNDg%3D; c_secure_pass=b32d7c4da058335da33bc56958324a95; c_secure_ssl=eWVhaA%3D%3D; c_secure_tracker_ssl=eWVhaA%3D%3D; c_secure_login=bm9wZQ%3D%3D'
+      user-agent: '{? headers.user_agent ?}'
+      comment: yes
+      discount:
+        - free
+        - 2xfree
+    verify_ssl_certificates: no
+    content_size:
+      min: 2048
+      max: 512000
+      strict: no
+    template:
+      - ol_qbittorrent_base_template
+      - ol_qbittorrent_add_template
+  pterclub:
+    rss:
+      url: https://pterclub.com/torrentrss.php?rows=20&tag_internal=yes&isize=1&linktype=dl&passkey=f2da270d053e551fd4e540383fecebed
+      all_entries: no
+      other_fields:
+        - link
+    nexusphp:
+      cookie: 'c_secure_uid=Nzk2MA%3D%3D; c_secure_pass=bb0ba88190f0ba2c23f72297a330b241; c_secure_ssl=eWVhaA%3D%3D; c_secure_tracker_ssl=eWVhaA%3D%3D; c_secure_login=bm9wZQ%3D%3D; PHPSESSID=9rlitluhsv0dv420ic49i03mui'
+      user-agent: '{? headers.user_agent ?}'
+      comment: yes
+      discount:
+        - free
+        - 2xfree
+    no_entries_ok: yes
+    if:
+      - size > 1024 * 1024 and size < 20 * 1024 *1024: accept
+    notify:
+      entries:
+        message: "Title: {{title}}\nLink: {{link}}"
+        via: *via_setting
+    qbittorrent_mod:
+      action:
+        add:
+          category: PTer
+          reject_on:
+            dl_speed: no
+            dl_limit: no
+    template:
+      - ol_qbittorrent_base_template
+      - ol_qbittorrent_base_template
+  hdarea:
+    rss: 
+      url: https://www.hdarea.co/torrentrss.php?rows=20&cat300=1&cat401=1&cat415=1&cat416=1&cat411=1&cat404=1&cat405=1&cat402=1&cat403=1&cat406=1&linktype=dl&passkey=67cc2ab27f42f66154eecb6c015c167f
+      other_fields:
+        - link
+    nexusphp:
+      cookie: 'cf_clearance=ND59RiE1id11m_vFBuqbOravhb8DdCEB6WtNfA.pXlQ-1635498734-0-150; __gads=ID=de5b81d1b27ea2c2-22f494d6ebcc00dc:T=1635498738:RT=1635498738:S=ALNI_MaI4LkqyAldAH6QEpb0mYxe4vFzXg; _ga=GA1.2.649004351.1635498761; UM_distinctid=17ccb529a643ca-0d5b822203e3bc-53e356a-1fa400-17ccb529a655ef; Hm_lvt_04584756b6df0223a0a33332be422d74=1635498762; c_secure_uid=OTYyMTA%3D; c_secure_pass=46a39e569e76220d6e667341c89a0c0f; c_secure_ssl=eWVhaA%3D%3D; c_secure_tracker_ssl=eWVhaA%3D%3D; c_secure_login=bm9wZQ%3D%3D; _gid=GA1.2.1615612930.1635831649; CNZZDATA1275308543=1197125109-1635493228-https%253A%252F%252Fwww.hdarea.co%252F%7C1635839486; Hm_lpvt_04584756b6df0223a0a33332be422d74=1635840328'
+      user-agent: '{? headers.user_agent ?}'
+      comment: yes
+      discount:
+        - free
+        - 2xfree
+      seeders:
+        min: 1
+        max: 3
+    verify_ssl_certificates: no
+    limit_new: 5
+    content_size:
+      min: 2048
+      max: 1024000
+      strict: no
+    template:
+      - ol_qbittorrent_base_template
+      - ol_qbittorrent_add_template
+  rss_download:
+    inputs:
+      - rss:
+          url: https://hdchina.org/torrentrss.php?rows=10&cat17=1&cat16=1&cat9=1&cat13=1&cat25=1&cat26=1&cat24=1&cat5=1&cat15=1&cat401=1&cat411=1&cat412=1&linktype=dl&passkey=a6012e1fc0df78cca38a9ba8f23f3e9c
+          all_entries: no
+ #     - rss:
+  #        url: https://pterclub.com/torrentrss.php?rows=20&tag_internal=yes&isize=1&linktype=dl&passkey=f2da270d053e551fd4e540383fecebed
+  #        all_entries: no
+      - rss:
+          url: https://kp.m-team.cc/torrentrss.php?https=1&rows=10&cat410=1&linktype=dl&passkey=3cc0eb957e2d34f7a0e6689e5f80e34a
+          all_entries: no
+   #   - rss:
+    #      url: https://www.hdarea.co/torrentrss.php?rows=20&cat300=1&cat401=1&cat415=1&cat416=1&cat411=1&cat404=1&cat405=1&cat402=1&cat403=1&cat406=1&linktype=dl&passkey=67cc2ab27f42f66154eecb6c015c167f
+    #      all_entries: no
+  #    - rss:
+   #       url: https://lemonhd.org/torrentrss.php?rows=20&linktype=dl&passkey=d45f0fe6b1a377f13fb205a9d07b5f30
+   #       all_entries: no
+    no_entries_ok: yes
+    verify_ssl_certificates: no
+    accept_all: yes
+    limit_new: 10
+    content_size:
+      strict: no
+      min: 2048
+      max: 102400
+    template:
+      - ol_qbittorrent_base_template
+      - ol_qbittorrent_add_template
+
+  
+  resume: &resume
+    priority: 2
+    disable: [seen, seen_info_hash, retry_failed]
+    if:
+      - qbittorrent_state == 'pausedUP' and qbittorrent_downloaded == 0 and qbittorrent_added_on > now - timedelta(hours=1): accept
+
+  delete: &delete
+    priority: 3
+    disable: [seen, seen_info_hash, retry_failed]
+    if:
+      # 种子最后活动时间超过2天，或者添加种子超过7天-删除
+      - qbittorrent_category in ['RSS'] and (qbittorrent_last_activity < now - timedelta(days=2) or qbittorrent_added_on < now - timedelta(days=7)): accept
+      # 种子数据丢失或者种子被暂停且尚未完成下载-删除
+      - qbittorrent_state == 'missingFiles' or (qbittorrent_state in ['pausedDL'] and qbittorrent_completed == 0): accept
+      # 种子数量大于4且下载速度大于10，上传速度小于1-删除
+      - qbittorrent_num_seeds > 4  and qbittorrent_upspeed < 1048576: accept
+    sort_by: qbittorrent_last_activity
+
+  modify: &modify
+    priority: 4
+    disable: [seen, seen_info_hash, retry_failed]
+    accept_all: yes
+
+  clean: &clean
+    priority: 5
+    disable: [seen, seen_info_hash, retry_failed]
+    # 清理 tracker 信息匹配的种子
+    regexp:
+      accept:
+        - '[Tt]orrent not registered with this tracker'
+        - 'Torrent banned'
+        - 'Unregistered torrent'
+        - '006-种子尚未上传或者已经被删除'
+        - 'Torrent is not authorized for use on this tracker.'
+      from: qbittorrent_tracker_msg
+
+  ol_resume:
+    <<: *resume
+    template:
+      - ol_from_qbittorrent_template
+      - ol_qbittorrent_base_template
+      - qbittorrent_resume_template
+  
+  
+  
+  ol_delete:
+    <<: *delete 
+    template:
+      - ol_from_qbittorrent_template
+      - ol_qbittorrent_base_template      
+      - ol_qbittorrent_delete_keeper_template
+  
+ 
+  
+  ol_modify:
+    <<: *modify
+    template:
+      - ol_from_qbittorrent_template
+      - ol_qbittorrent_base_template
+      - qbittorrent_modify_template
+  
+  
+
+  ol_clean:
+    <<: *clean
+    template:
+      - ol_from_qbittorrent_template
+      - ol_qbittorrent_base_template
+      - qbittorrent_delete_cleaner_template
+  
+    # 防白嫖
+  limit_upload_by_tracker:
+    disable: [ seen, seen_info_hash, retry_failed, history ]
+    if:
+      # 筛选 不在暂停状态 且 添加时间大于 5分钟 的种子
+      - "'paused' not in qbittorrent_state and qbittorrent_added_on < now - timedelta(minutes=5)": accept
+    from_qbittorrent_mod:
+      # 强制重新获取 正在上传的种子的 trakcer 状态 
+      force_update: uploading
+    template:
+      - ol_from_qbittorrent_template
+      - ol_qbittorrent_base_template
+      - qbittorrent_limit_upload_by_tracker_template
+      
+   #自动签到
+  sign_in:
+    auto_sign_in:
+      user-agent: '{? headers.user_agent ?}'
+      #baidu ocr参数
+      sites: *sites_setting
+    accept_all: yes
+    retry_failed:
+      retry_time_multiplier: no
+    seen:
+      fields:
+        - title
+    notify:
+      task:
+        always_send: false
+        message: |+
+          {%- if task.accepted -%}
+          {%- for group in task.accepted|groupby('task') -%}
+          FlexGet has just signed in {{ group.list|length }} sites for task {{ group.grouper }}:
+          {% for entry in group.list %}
+          {{ loop.index }}: {{ entry.title }} {{ entry.result }}
+          {%- if entry.messages|d('') %}
+          Messages: {{ entry.messages }}
+          {% endif %}
+          {%- endfor -%}
+          {%- endfor -%}
+          {%- endif -%}
+          {%- if task.failed %}
+          {% for group in task.failed|groupby('task') %}
+          The following sites have failed for task {{ group.grouper }}:
+          {% for entry in group.list %}
+          {{ loop.index }}: {{ entry.title }} Reason: {{ entry.reason|d('unknown') }}
+          {%- if entry.messages|d('') %}
+          Messages: {{ entry.messages }}
+          {% endif %}
+          {%- endfor -%}
+          {%- endfor -%}
+          {%- endif -%}
+        via:
+          - telegram_mod:
+              bot_token: '1661741888:AAFJj-lfB6IU6tM_5hFCOE--yt4vOm_i1VQ'
+              #发送统计图片
+              image: 'details_report.png'
+              recipients:
+                - username: 'Niceman110'
+  
+  #自动签到
+
+  #服务器状态预警
+  warner:
+    disable: [ seen, seen_info_hash, retry_failed, history ]
+    from_qbittorrent_mod:
+      # 生成带 server_state 的唯一entry, 并设置 title 为 'qBittorrent Server State'
+      server_state: 'qBittorrent Server State'
+    if:
+      # qBittorrent 不可连接
+      - 'not server_state["flexget_connected"]': accept
+      # 下载速度 < 1 MiB
+      - 'server_state["dl_info_speed"] < 1048576': accept
+      # 上传速度 < 1 MiB
+      - 'server_state["up_info_speed"] < 1048576': accept
+      # 磁盘剩余空间< 5 GiB
+      - 'server_state["free_space_on_disk"] < 5368709120': accept
+    template:
+      - ol_from_qbittorrent_template
+    notify:
+      entries:
+        message: |+
+          {{ time }}
+          {{ title }}:
+          {% if not server_state.flexget_connected -%}
+          flexget_connected: False
+          {%- else -%}
+          dl_info_speed: {{(server_state['dl_info_speed']/1024/1024)|int}} MiB
+          up_info_speed: {{(server_state['up_info_speed']/1024/1024)|int}} MiB
+          free_space_on_disk: {{(server_state['free_space_on_disk']/1024/1024/1024)|int}} GiB
+          {% endif %}
+        via: *via_setting
