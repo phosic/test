@@ -3,10 +3,10 @@
 file=$1
 
 cloudName=webdrive
-cloudFolder=/189home/ptdownload
+cloudFolder=/77pan/ptup
 
 software=/root/up/rclone
-transfers=16
+transfers=8
 
 if [ -d "${file}" ];then
 	${software} copy --transfers=$transfers "$1" ${cloudName}:${cloudFolder}/"$2" 
